@@ -4,13 +4,13 @@ package LeftRecursionRemover.GrammarSyntax;
  * Created by razvan on 5/2/15.
  */
 public class Terminal extends Symbol {
-  public static final Terminal EMPTY = new Terminal("\u03B5");
+  public static final Terminal EMPTY = new Terminal("$");
 
   public Terminal(String value) {
-    mValue = value;
+    super(value);
   }
 
-  public String value() {
-    return mValue;
+  public int type() {
+    return Symbol.TYPE_TERMINAL;
   }
 }

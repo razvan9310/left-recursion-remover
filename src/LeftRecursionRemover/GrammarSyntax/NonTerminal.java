@@ -5,10 +5,10 @@ package LeftRecursionRemover.GrammarSyntax;
  */
 public class NonTerminal extends Symbol{
   public NonTerminal(String value) {
-    mValue = value;
+    super(value);
   }
 
-  public String value() {
-    return mValue;
+  public int type() {
+    return Symbol.TYPE_NON_TERMINAL;
   }
 }
