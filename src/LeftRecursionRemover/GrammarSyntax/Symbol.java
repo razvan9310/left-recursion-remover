@@ -1,5 +1,7 @@
 package LeftRecursionRemover.GrammarSyntax;
 
+import LeftRecursionRemover.Exception.SymbolException;
+
 /**
  * Created by razvan on 5/2/15.
  */
@@ -9,7 +11,10 @@ public abstract class Symbol {
 
   protected String mValue;
 
-  public Symbol(String value) {
+  public Symbol(String value) throws SymbolException {
+    if (value == null) {
+      throw new SymbolException("Null symbol value!");
+    }
     mValue = value;
   }
 

@@ -61,4 +61,13 @@ public class Grammar {
     mProductionRules = productionRules;
     mStartingSymbol = startingSymbol;
   }
+
+  public boolean hasEmptyProductions() {
+    for (ProductionRule productionRule : mProductionRules) {
+      if (productionRule.isEmpty()) {
+        return true;
+      }
+    }
+    return false;
+  }
 }

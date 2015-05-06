@@ -42,4 +42,9 @@ public class ProductionRule {
   public boolean isContextFree() {
     return mLeftMember.size() == 1 && mLeftMember.get(0).type() == Symbol.TYPE_NON_TERMINAL;
   }
+
+  public boolean isEmpty() {
+    return mRightMember.size() == 1 && mRightMember.get(0).type() == Symbol.TYPE_TERMINAL
+        && Terminal.EMPTY_VALUE.equals(mRightMember.get(0).value());
+  }
 }
