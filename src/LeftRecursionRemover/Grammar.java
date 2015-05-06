@@ -6,37 +6,58 @@ import LeftRecursionRemover.Exception.ProductionRuleException;
 import LeftRecursionRemover.Exception.TerminalException;
 import LeftRecursionRemover.GrammarSyntax.NonTerminal;
 import LeftRecursionRemover.GrammarSyntax.ProductionRule;
+import LeftRecursionRemover.GrammarSyntax.Symbol;
 import LeftRecursionRemover.GrammarSyntax.Terminal;
 
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by razvan on 5/2/15.
  */
 public class Grammar {
-  protected ArrayList<NonTerminal> mNonTerminalSymbols;
-  protected ArrayList<Terminal> mTerminalSymbols;
-  protected ArrayList<ProductionRule> mProductionRules;
+  protected List<NonTerminal> mNonTerminals;
+  protected List<Terminal> mTerminals;
+  protected List<ProductionRule> mProductionRules;
   protected NonTerminal mStartingSymbol;
 
-  public Grammar(ArrayList<NonTerminal> nonTerminalSymbols, ArrayList<Terminal> terminalSymbols,
-      ArrayList<ProductionRule> productionRules, NonTerminal startingSymbol)
+  public Grammar(List<NonTerminal> nonTerminals, List<Terminal> terminals,
+      List<ProductionRule> productionRules, NonTerminal startingSymbol)
       throws GrammarException {
-    if (nonTerminalSymbols == null || nonTerminalSymbols.isEmpty()) {
+    if (nonTerminals == null || nonTerminals.isEmpty()) {
       throw new NonTerminalException("Null or empty non-terminals list!");
     }
-    if (terminalSymbols == null || terminalSymbols.isEmpty()) {
+    if (terminals == null || terminals.isEmpty()) {
       throw new TerminalException("Null or empty terminals list!");
     }
     if (productionRules == null || productionRules.isEmpty()) {
       throw new ProductionRuleException("Null or empty production rules list!");
     }
-    if (!nonTerminalSymbols.contains(startingSymbol)) {
+
+    for (ProductionRule productionRule : productionRules) {
+      for (Symbol symbol : productionRule.leftMember()) {
+        if (symbol.type() == Symbol.TYPE_NON_TERMINAL && !nonTerminals.contains(symbol)) {
+          throw new ProductionRuleException("Invalid non-terminal in production rule!");
+        }
+        if (symbol.type() == Symbol.TYPE_TERMINAL && !terminals.contains(symbol)) {
+          throw new ProductionRuleException("Invalid terminal in production rule!");
+        }
+      }
+      for (Symbol symbol : productionRule.rightMember()) {
+        if (symbol.type() == Symbol.TYPE_NON_TERMINAL && !nonTerminals.contains(symbol)) {
+          throw new ProductionRuleException("Invalid non-terminal in production rule!");
+        }
+        if (symbol.type() == Symbol.TYPE_TERMINAL && !terminals.contains(symbol)) {
+          throw new ProductionRuleException("Invalid terminal in production rule!");
+        }
+      }
+    }
+
+    if (!nonTerminals.contains(startingSymbol)) {
       throw new NonTerminalException("Invalid starting symbol!");
     }
 
-    mNonTerminalSymbols = nonTerminalSymbols;
-    mTerminalSymbols = terminalSymbols;
+    mNonTerminals = nonTerminals;
+    mTerminals = terminals;
     mProductionRules = productionRules;
     mStartingSymbol = startingSymbol;
   }

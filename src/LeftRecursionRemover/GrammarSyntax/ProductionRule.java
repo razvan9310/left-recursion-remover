@@ -2,24 +2,17 @@ package LeftRecursionRemover.GrammarSyntax;
 
 import LeftRecursionRemover.Exception.ProductionRuleException;
 
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by razvan on 5/2/15.
  */
 public class ProductionRule {
-  private ArrayList<Symbol> mLeftMember;
-  private ArrayList<Symbol> mRightMember;
+  private List<Symbol> mLeftMember;
+  private List<Symbol> mRightMember;
 
-  public ArrayList<Symbol> leftMember() {
-    return mLeftMember;
-  }
-
-  public ArrayList<Symbol> rightMember() {
-    return mRightMember;
-  }
-
-  public void setLeftMember(ArrayList<Symbol> leftMember) throws ProductionRuleException {
+  public ProductionRule(List<Symbol> leftMember, List<Symbol> rightMember)
+      throws ProductionRuleException {
     boolean foundNonTerminal = false;
     for (Symbol symbol : leftMember) {
       if (symbol.type() == Symbol.TYPE_NON_TERMINAL) {
@@ -31,9 +24,22 @@ public class ProductionRule {
       throw new ProductionRuleException("Left member must contain at least one non-terminal!");
     }
     mLeftMember = leftMember;
+    mRightMember = rightMember;
   }
 
-  public void setRightMember(ArrayList<Symbol> rightMember) {
-    mRightMember = rightMember;
+  public ProductionRule(ProductionRule other) throws ProductionRuleException {
+    this(other.leftMember(), other.rightMember());
+  }
+
+  public List<Symbol> leftMember() {
+    return mLeftMember;
+  }
+
+  public List<Symbol> rightMember() {
+    return mRightMember;
+  }
+
+  public boolean isContextFree() {
+    return mLeftMember.size() == 1 && mLeftMember.get(0).type() == Symbol.TYPE_NON_TERMINAL;
   }
 }
