@@ -8,16 +8,14 @@ import LeftRecursionRemover.GrammarSyntax.Terminal;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * Created by razvan on 5/5/15.
  */
 public class Main {
   public static void main(String[] args) throws GrammarException {
-    // A -> B
-    // A -> $
-    // B -> A
+    // A -> A a
+    // A -> b
     NonTerminal A = new NonTerminal("A");
     Terminal a = new Terminal("a");
     Terminal b = new Terminal("b");
