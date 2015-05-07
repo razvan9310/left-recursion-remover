@@ -2,6 +2,7 @@ package LeftRecursionRemover.GrammarSyntax;
 
 import LeftRecursionRemover.Exception.ProductionRuleException;
 
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -26,6 +27,35 @@ public class ProductionRule {
       throw new ProductionRuleException("Left member must contain at least one non-terminal" +
               " (exactly one for context-free grammars)!");
     }
+
+    if (leftMember.size() > 1) {
+      int symbolsRemoved = 0;
+      int initialProductionSymbolsCount = leftMember.size();
+      Iterator<Symbol> symbolIterator = leftMember.iterator();
+      while (symbolIterator.hasNext()) {
+        Symbol symbol = symbolIterator.next();
+        if (Terminal.EMPTY_VALUE.equals(symbol.value())
+                && symbolsRemoved < initialProductionSymbolsCount - 1) {
+          symbolIterator.remove();
+          ++symbolsRemoved;
+        }
+      }
+    }
+
+    if (rightMember.size() > 1) {
+      int symbolsRemoved = 0;
+      int initialProductionSymbolsCount = rightMember.size();
+      Iterator<Symbol> symbolIterator = rightMember.iterator();
+      while (symbolIterator.hasNext()) {
+        Symbol symbol = symbolIterator.next();
+        if (Terminal.EMPTY_VALUE.equals(symbol.value())
+                && symbolsRemoved < initialProductionSymbolsCount - 1) {
+          symbolIterator.remove();
+          ++symbolsRemoved;
+        }
+      }
+    }
+
     mLeftMember = leftMember;
     mRightMember = rightMember;
   }
