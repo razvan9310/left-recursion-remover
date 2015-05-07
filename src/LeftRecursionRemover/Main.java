@@ -14,28 +14,50 @@ import java.util.Arrays;
  */
 public class Main {
   public static void main(String[] args) throws GrammarException {
-    // A -> A a
-    // A -> b
+    // A -> B x y | x
+    // B -> C D
+    // C -> A | c
+    // D -> d
     NonTerminal A = new NonTerminal("A");
-    Terminal a = new Terminal("a");
-    Terminal b = new Terminal("b");
+    NonTerminal B = new NonTerminal("B");
+    NonTerminal C = new NonTerminal("C");
+    NonTerminal D = new NonTerminal("D");
+    Terminal x = new Terminal("x");
+    Terminal y = new Terminal("y");
+    Terminal c = new Terminal("c");
+    Terminal d = new Terminal("d");
 
-    ProductionRule p1 = new ProductionRule(Arrays.asList((Symbol) A), Arrays.asList(A, a));
-    ProductionRule p2 = new ProductionRule(Arrays.asList((Symbol) A), Arrays.asList((Symbol) b));
+    ProductionRule p1 = new ProductionRule(Arrays.asList((Symbol) A), Arrays.asList(B, x, y));
+    ProductionRule p2 = new ProductionRule(Arrays.asList((Symbol) A), Arrays.asList((Symbol) x));
+    ProductionRule p3 = new ProductionRule(Arrays.asList((Symbol) B), Arrays.asList(C, D));
+    ProductionRule p4 = new ProductionRule(Arrays.asList((Symbol) C), Arrays.asList((Symbol) A));
+    ProductionRule p5 = new ProductionRule(Arrays.asList((Symbol) C), Arrays.asList((Symbol) c));
+    ProductionRule p6 = new ProductionRule(Arrays.asList((Symbol) D), Arrays.asList((Symbol) d));
 
-    ArrayList<NonTerminal> nonTerminals = new ArrayList<NonTerminal>();
+    ArrayList<NonTerminal> nonTerminals = new ArrayList<>();
     nonTerminals.add(A);
-    ArrayList<Terminal> terminals = new ArrayList<Terminal>();
-    terminals.add(a);
-    terminals.add(b);
-    ArrayList<ProductionRule> productionRules = new ArrayList<ProductionRule>();
+    nonTerminals.add(B);
+    nonTerminals.add(C);
+    nonTerminals.add(D);
+    ArrayList<Terminal> terminals = new ArrayList<>();
+    terminals.add(x);
+    terminals.add(y);
+    terminals.add(c);
+    terminals.add(d);
+    ArrayList<ProductionRule> productionRules = new ArrayList<>();
     productionRules.add(p1);
     productionRules.add(p2);
+    productionRules.add(p3);
+    productionRules.add(p4);
+    productionRules.add(p5);
+    productionRules.add(p6);
 
     ContextFreeGrammar CFG = new ContextFreeGrammar(nonTerminals, terminals, productionRules, A);
 
-    CFG.removeImmediateLeftRecursion(A, "0");
+    CFG.removeLeftRecursion();
 
+//    CFG.removeImmediateLeftRecursion(A, "0");
+//
     for (ProductionRule productionRule : CFG.productionRules()) {
       System.out.print(productionRule.leftMember().get(0).value() + " ->");
       for (Symbol symbol : productionRule.rightMember()) {

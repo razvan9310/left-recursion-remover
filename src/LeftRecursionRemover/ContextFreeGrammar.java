@@ -10,6 +10,7 @@ import LeftRecursionRemover.GrammarSyntax.Symbol;
 import LeftRecursionRemover.GrammarSyntax.Terminal;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by razvan on 5/5/15.
@@ -45,7 +46,7 @@ public class ContextFreeGrammar extends Grammar {
 
   public ArrayList<ProductionRule> removeUnreachableProductionRules() {
     removeUnreachableNonTerminals();
-    ArrayList<ProductionRule> removedProductionRules = new ArrayList<ProductionRule>();
+    ArrayList<ProductionRule> removedProductionRules = new ArrayList<>();
 
     Iterator<ProductionRule> productionRuleIterator = mProductionRules.iterator();
     while (productionRuleIterator.hasNext()) {
@@ -89,8 +90,8 @@ public class ContextFreeGrammar extends Grammar {
 
   public ArrayList<NonTerminal> getCycle() {
     for (NonTerminal nonTerminal : mNonTerminals) {
-      HashSet<NonTerminal> visited = new HashSet<NonTerminal>();
-      ArrayList<NonTerminal> stack = new ArrayList<NonTerminal>();
+      HashSet<NonTerminal> visited = new HashSet<>();
+      ArrayList<NonTerminal> stack = new ArrayList<>();
       stack.add(nonTerminal);
       stack = depthFirstSearch(nonTerminal, visited, stack);
       if (stack.size() > 1 && stack.get(0).equals(stack.get(stack.size() - 1))) {
@@ -100,12 +101,13 @@ public class ContextFreeGrammar extends Grammar {
     return null;
   }
 
-  public void removeImmediateLeftRecursion(NonTerminal nonTerminal, String newNonTerminalSuffix) {
+  public void removeImmediateLeftRecursion(NonTerminal nonTerminal, String newNonTerminalSuffix)
+      throws GrammarException {
     if (nonTerminal == null) {
       return;
     }
-    ArrayList<ProductionRule> leftRecursiveProductions = new ArrayList<ProductionRule>();
-    ArrayList<ProductionRule> nonLeftRecursiveProductions = new ArrayList<ProductionRule>();
+    ArrayList<ProductionRule> leftRecursiveProductions = new ArrayList<>();
+    ArrayList<ProductionRule> nonLeftRecursiveProductions = new ArrayList<>();
     for (ProductionRule productionRule : mProductionRules) {
       if (!nonTerminal.equals(productionRule.leftMember().get(0))) {
         continue;
@@ -120,49 +122,29 @@ public class ContextFreeGrammar extends Grammar {
       return;
     }
 
-    NonTerminal newNonTerminal;
-    try {
-      newNonTerminal = new NonTerminal(
-          NonTerminal.DEFAULT_NEW_NONTERMINAL_VALUE + newNonTerminalSuffix);
-    } catch (SymbolException e) {
-      System.err.println("A supernatural error occurred.");
-      return;
-    }
+    NonTerminal newNonTerminal = new NonTerminal(
+        NonTerminal.DEFAULT_NEW_NONTERMINAL_VALUE + newNonTerminalSuffix);
 
-    ArrayList<ProductionRule> newProductionRules = new ArrayList<ProductionRule>();
+    ArrayList<ProductionRule> newProductionRules = new ArrayList<>();
     for (ProductionRule productionRule : nonLeftRecursiveProductions) {
-      ArrayList<Symbol> newRightMember = new ArrayList<Symbol>();
-      for (Symbol symbol : productionRule.rightMember()) {
-        newRightMember.add(symbol);
-      }
+      ArrayList<Symbol> newRightMember = new ArrayList<>();
+      newRightMember.addAll(productionRule.rightMember());
       newRightMember.add(newNonTerminal);
-      try {
-        newProductionRules.add(
-            new ProductionRule(Arrays.asList((Symbol) nonTerminal), newRightMember));
-      } catch (ProductionRuleException e) {
-        System.err.println("A supernatural error occurred.");
-      }
+      newProductionRules.add(
+          new ProductionRule(Arrays.asList((Symbol) nonTerminal), newRightMember));
     }
 
-    try {
-      newProductionRules.add(new ProductionRule(Arrays.asList((Symbol) newNonTerminal),
-          Arrays.asList((Symbol) new Terminal(Terminal.EMPTY_VALUE))));
-    } catch (GrammarException e) {
-      System.err.println("A supernatural error occurred.");
-    }
+    newProductionRules.add(new ProductionRule(Arrays.asList((Symbol) newNonTerminal),
+        Arrays.asList((Symbol) new Terminal(Terminal.EMPTY_VALUE))));
 
     for (ProductionRule productionRule : leftRecursiveProductions) {
-      ArrayList<Symbol> newRightMember = new ArrayList<Symbol>();
+      ArrayList<Symbol> newRightMember = new ArrayList<>();
       for (int i = 1; i < productionRule.rightMember().size(); ++i) {
         newRightMember.add(productionRule.rightMember().get(i));
       }
       newRightMember.add(newNonTerminal);
-      try {
-        newProductionRules.add(
-            new ProductionRule(Arrays.asList((Symbol) newNonTerminal), newRightMember));
-      } catch (ProductionRuleException e) {
-        System.err.println("A supernatural error occurred.");
-      }
+      newProductionRules.add(
+          new ProductionRule(Arrays.asList((Symbol) newNonTerminal), newRightMember));
     }
 
     Iterator<ProductionRule> productionRuleIterator = mProductionRules.iterator();
@@ -175,7 +157,46 @@ public class ContextFreeGrammar extends Grammar {
     mProductionRules.addAll(newProductionRules);
   }
 
-  public List<ProductionRule> productionRules() {
-    return mProductionRules;
+  public void removeLeftRecursion() throws GrammarException {
+    for (int i = 0; i < mNonTerminals.size(); ++i) {
+      for (int j = 0; j < i; ++j) {
+        // Ai:
+        NonTerminal iNonTerminal = mNonTerminals.get(i);
+        // Aj:
+        NonTerminal jNonTerminal = mNonTerminals.get(j);
+        // Aj -> a1 | a2 | ... | ak:
+        List<ProductionRule> jProductionRules = mProductionRules.stream()
+            .filter(productionRule -> jNonTerminal.equals(productionRule.leftMember().get(0)))
+            .collect(Collectors.toList());
+
+        ArrayList<ProductionRule> newProductionRules = new ArrayList<>();
+        Iterator<ProductionRule> productionRuleIterator = mProductionRules.iterator();
+
+        while (productionRuleIterator.hasNext()) {
+          ProductionRule productionRule = productionRuleIterator.next();
+          if (!iNonTerminal.equals(productionRule.leftMember().get(0))
+              || !jNonTerminal.equals(productionRule.rightMember().get(0))) {
+            continue;
+          }
+          // Ai -> Aj b:
+          for (ProductionRule jProductionRule : jProductionRules) {
+            ArrayList<Symbol> newRightMember = new ArrayList<>();
+            newRightMember.addAll(jProductionRule.rightMember());
+            newRightMember.addAll(
+                productionRule.rightMember().subList(1, productionRule.rightMember().size()));
+            // Ai -> a1 b | a2 b | ... | ak b:
+            newProductionRules.add(
+                new ProductionRule(Arrays.asList((Symbol) iNonTerminal), newRightMember));
+          }
+          // Remove ai -> Aj b:
+          productionRuleIterator.remove();
+        }
+        // Add all new Ai -> a1 b | a2 b | ... | ak b productions:
+        mProductionRules.addAll(newProductionRules);
+
+        // Remove immediate left recursion for Ai:
+        removeImmediateLeftRecursion(iNonTerminal, String.valueOf(i));
+      }
+    }
   }
 }
