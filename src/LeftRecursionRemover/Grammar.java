@@ -9,6 +9,8 @@ import LeftRecursionRemover.GrammarSyntax.ProductionRule;
 import LeftRecursionRemover.GrammarSyntax.Symbol;
 import LeftRecursionRemover.GrammarSyntax.Terminal;
 
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -36,24 +38,43 @@ public class Grammar {
     for (ProductionRule productionRule : productionRules) {
       for (Symbol symbol : productionRule.leftMember()) {
         if (symbol.type() == Symbol.TYPE_NON_TERMINAL && !nonTerminals.contains(symbol)) {
-          throw new ProductionRuleException("Invalid non-terminal in production rule!");
+          throw new ProductionRuleException(
+              "Invalid non-terminal in production rule: " + symbol.value());
         }
         if (symbol.type() == Symbol.TYPE_TERMINAL && !terminals.contains(symbol)) {
-          throw new ProductionRuleException("Invalid terminal in production rule!");
+          throw new ProductionRuleException(
+              "Invalid terminal in production rule: " + symbol.value());
         }
       }
       for (Symbol symbol : productionRule.rightMember()) {
         if (symbol.type() == Symbol.TYPE_NON_TERMINAL && !nonTerminals.contains(symbol)) {
-          throw new ProductionRuleException("Invalid non-terminal in production rule!");
+          throw new ProductionRuleException(
+              "Invalid non-terminal in production rule: " + symbol.value());
         }
-        if (symbol.type() == Symbol.TYPE_TERMINAL && !terminals.contains(symbol)) {
-          throw new ProductionRuleException("Invalid terminal in production rule!");
+        if (symbol.type() == Symbol.TYPE_TERMINAL && !terminals.contains(symbol)
+            && !Terminal.EMPTY_VALUE.equals(symbol.value())) {
+          throw new ProductionRuleException(
+              "Invalid terminal in production rule: " + symbol.value());
+        }
+      }
+
+      if (productionRule.rightMember().size() > 1) {
+        int symbolsRemoved = 0;
+        int initialProductionSymbolsCount = productionRule.rightMember().size();
+        Iterator<Symbol> symbolIterator = productionRule.rightMember().iterator();
+        while (symbolIterator.hasNext()) {
+          Symbol symbol = symbolIterator.next();
+          if (Terminal.EMPTY_VALUE.equals(symbol.value())
+              && symbolsRemoved < initialProductionSymbolsCount - 1) {
+            symbolIterator.remove();
+            ++symbolsRemoved;
+          }
         }
       }
     }
 
     if (!nonTerminals.contains(startingSymbol)) {
-      throw new NonTerminalException("Invalid starting symbol!");
+      throw new NonTerminalException("Starting symbol is not a valid non-terminal!");
     }
 
     mNonTerminals = nonTerminals;

@@ -28,17 +28,32 @@ public class ContextFreeGrammar extends Grammar {
   }
 
   private void removeUnreachableNonTerminals() {
+    ArrayList<NonTerminal> queue = new ArrayList<>();
+    HashSet<String> visited = new HashSet<>();
+    queue.add(mStartingSymbol);
+    visited.add(mStartingSymbol.value());
+    int currentQueuePosition = 0;
+
+    while (currentQueuePosition < queue.size()) {
+      NonTerminal currentNonTerminal = queue.get(currentQueuePosition);
+      for (ProductionRule productionRule : mProductionRules) {
+        if (!currentNonTerminal.equals(productionRule.leftMember().get(0))) {
+          continue;
+        }
+        for (Symbol symbol : productionRule.rightMember()) {
+          if (symbol.type() == Symbol.TYPE_NON_TERMINAL && !visited.contains(symbol.value())) {
+            visited.add(symbol.value());
+            queue.add((NonTerminal) symbol);
+          }
+        }
+      }
+      ++currentQueuePosition;
+    }
+
     Iterator<NonTerminal> nonTerminalIterator = mNonTerminals.iterator();
     while (nonTerminalIterator.hasNext()) {
       NonTerminal nonTerminal = nonTerminalIterator.next();
-      boolean isReachable = false;
-      for (ProductionRule productionRule : mProductionRules) {
-        if (productionRule.rightMember().contains(nonTerminal)) {
-          isReachable = true;
-          break;
-        }
-      }
-      if (!isReachable) {
+      if (!visited.contains(nonTerminal.value())) {
         nonTerminalIterator.remove();
       }
     }
@@ -65,9 +80,9 @@ public class ContextFreeGrammar extends Grammar {
     return removedProductionRules;
   }
 
-  private ArrayList<NonTerminal> depthFirstSearch(NonTerminal current, HashSet<NonTerminal> visited,
+  private ArrayList<NonTerminal> depthFirstSearch(NonTerminal current, HashSet<String> visited,
       ArrayList<NonTerminal> stack) {
-    visited.add(current);
+    visited.add(current.value());
     for (ProductionRule productionRule : mProductionRules) {
       if (!productionRule.leftMember().get(0).equals(current)) {
         continue;
@@ -80,7 +95,7 @@ public class ContextFreeGrammar extends Grammar {
       }
       NonTerminal next = (NonTerminal) productionRule.rightMember().get(0);
       stack.add(next);
-      if (visited.contains(next)) {
+      if (visited.contains(next.value())) {
         return stack;
       }
       return depthFirstSearch(next, visited, stack);
@@ -90,7 +105,7 @@ public class ContextFreeGrammar extends Grammar {
 
   public ArrayList<NonTerminal> getCycle() {
     for (NonTerminal nonTerminal : mNonTerminals) {
-      HashSet<NonTerminal> visited = new HashSet<>();
+      HashSet<String> visited = new HashSet<>();
       ArrayList<NonTerminal> stack = new ArrayList<>();
       stack.add(nonTerminal);
       stack = depthFirstSearch(nonTerminal, visited, stack);
@@ -143,6 +158,17 @@ public class ContextFreeGrammar extends Grammar {
         newRightMember.add(productionRule.rightMember().get(i));
       }
       newRightMember.add(newNonTerminal);
+
+      if (newRightMember.size() > 1) {
+        Iterator<Symbol> symbolIterator = newRightMember.iterator();
+        while (symbolIterator.hasNext()) {
+          Symbol symbol = symbolIterator.next();
+          if (Terminal.EMPTY_VALUE.equals(symbol.value())) {
+            symbolIterator.remove();
+          }
+        }
+      }
+
       newProductionRules.add(
           new ProductionRule(Arrays.asList((Symbol) newNonTerminal), newRightMember));
     }
@@ -159,9 +185,9 @@ public class ContextFreeGrammar extends Grammar {
 
   public void removeLeftRecursion() throws GrammarException {
     for (int i = 0; i < mNonTerminals.size(); ++i) {
+      // Ai:
+      NonTerminal iNonTerminal = mNonTerminals.get(i);
       for (int j = 0; j < i; ++j) {
-        // Ai:
-        NonTerminal iNonTerminal = mNonTerminals.get(i);
         // Aj:
         NonTerminal jNonTerminal = mNonTerminals.get(j);
         // Aj -> a1 | a2 | ... | ak:
@@ -181,10 +207,24 @@ public class ContextFreeGrammar extends Grammar {
           // Ai -> Aj b:
           for (ProductionRule jProductionRule : jProductionRules) {
             ArrayList<Symbol> newRightMember = new ArrayList<>();
-            newRightMember.addAll(jProductionRule.rightMember());
-            newRightMember.addAll(
-                productionRule.rightMember().subList(1, productionRule.rightMember().size()));
+
+            for (Symbol symbol : jProductionRule.rightMember()) {
+              if (!Terminal.EMPTY_VALUE.equals(symbol.value())/*
+                  || jProductionRule.rightMember().size() == 1*/) {
+                newRightMember.add(symbol);
+              }
+            }
+
+            for (int k = 1; k < productionRule.rightMember().size(); ++k) {
+              if (!Terminal.EMPTY_VALUE.equals(productionRule.rightMember().get(k).value())) {
+                newRightMember.add(productionRule.rightMember().get(k));
+              }
+            }
+
             // Ai -> a1 b | a2 b | ... | ak b:
+            if (newRightMember.isEmpty()) {
+              newRightMember.add(new Terminal(Terminal.EMPTY_VALUE));
+            }
             newProductionRules.add(
                 new ProductionRule(Arrays.asList((Symbol) iNonTerminal), newRightMember));
           }
@@ -193,10 +233,9 @@ public class ContextFreeGrammar extends Grammar {
         }
         // Add all new Ai -> a1 b | a2 b | ... | ak b productions:
         mProductionRules.addAll(newProductionRules);
-
-        // Remove immediate left recursion for Ai:
-        removeImmediateLeftRecursion(iNonTerminal, String.valueOf(i));
       }
+      // Remove immediate left recursion for Ai:
+      removeImmediateLeftRecursion(iNonTerminal, String.valueOf(i));
     }
   }
 }

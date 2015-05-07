@@ -8,6 +8,8 @@ import java.util.List;
  * Created by razvan on 5/2/15.
  */
 public class ProductionRule {
+  public static final String PRODUCTION_RULE_SEPARATOR = "->";
+
   private List<Symbol> mLeftMember;
   private List<Symbol> mRightMember;
 
@@ -46,5 +48,17 @@ public class ProductionRule {
   public boolean isEmpty() {
     return mRightMember.size() == 1 && mRightMember.get(0).type() == Symbol.TYPE_TERMINAL
         && Terminal.EMPTY_VALUE.equals(mRightMember.get(0).value());
+  }
+
+  public boolean isLeftRecursive() {
+    if (mRightMember.size() < mLeftMember.size()) {
+      return false;
+    }
+    for (int i = 0; i < mLeftMember.size(); ++i) {
+      if (!mLeftMember.get(i).equals(mRightMember.get(i))) {
+        return false;
+      }
+    }
+    return true;
   }
 }

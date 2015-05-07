@@ -16,6 +16,10 @@ public class Terminal extends Symbol {
     return Symbol.TYPE_TERMINAL;
   }
 
+  public boolean isEmptyTerminal() {
+    return EMPTY_VALUE.equals(mValue);
+  }
+
   @Override
   public boolean equals(Object obj) {
     return obj instanceof Terminal && mValue.equals(((Terminal) obj).value());
