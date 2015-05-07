@@ -57,20 +57,6 @@ public class Grammar {
               "Invalid terminal in production rule: " + symbol.value());
         }
       }
-
-      if (productionRule.rightMember().size() > 1) {
-        int symbolsRemoved = 0;
-        int initialProductionSymbolsCount = productionRule.rightMember().size();
-        Iterator<Symbol> symbolIterator = productionRule.rightMember().iterator();
-        while (symbolIterator.hasNext()) {
-          Symbol symbol = symbolIterator.next();
-          if (Terminal.EMPTY_VALUE.equals(symbol.value())
-              && symbolsRemoved < initialProductionSymbolsCount - 1) {
-            symbolIterator.remove();
-            ++symbolsRemoved;
-          }
-        }
-      }
     }
 
     if (!nonTerminals.contains(startingSymbol)) {
