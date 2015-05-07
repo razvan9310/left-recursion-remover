@@ -145,6 +145,21 @@ public class ContextFreeGrammar extends Grammar {
       ArrayList<Symbol> newRightMember = new ArrayList<>();
       newRightMember.addAll(productionRule.rightMember());
       newRightMember.add(newNonTerminal);
+
+      if (newRightMember.size() > 1) {
+        int symbolsRemoved = 0;
+        int initialProductionSymbolsCount = newRightMember.size();
+        Iterator<Symbol> symbolIterator = newRightMember.iterator();
+        while (symbolIterator.hasNext()) {
+          Symbol symbol = symbolIterator.next();
+          if (Terminal.EMPTY_VALUE.equals(symbol.value())
+                  && symbolsRemoved < initialProductionSymbolsCount - 1) {
+            symbolIterator.remove();
+            ++symbolsRemoved;
+          }
+        }
+      }
+
       newProductionRules.add(
           new ProductionRule(Arrays.asList((Symbol) nonTerminal), newRightMember));
     }
@@ -164,11 +179,15 @@ public class ContextFreeGrammar extends Grammar {
       newRightMember.add(newNonTerminal);
 
       if (newRightMember.size() > 1) {
+        int symbolsRemoved = 0;
+        int initialProductionSymbolsCount = newRightMember.size();
         Iterator<Symbol> symbolIterator = newRightMember.iterator();
         while (symbolIterator.hasNext()) {
           Symbol symbol = symbolIterator.next();
-          if (Terminal.EMPTY_VALUE.equals(symbol.value())) {
+          if (Terminal.EMPTY_VALUE.equals(symbol.value())
+                  && symbolsRemoved < initialProductionSymbolsCount - 1) {
             symbolIterator.remove();
+            ++symbolsRemoved;
           }
         }
       }
