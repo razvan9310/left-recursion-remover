@@ -23,7 +23,8 @@ public class ProductionRule {
       }
     }
     if (!foundNonTerminal) {
-      throw new ProductionRuleException("Left member must contain at least one non-terminal!");
+      throw new ProductionRuleException("Left member must contain at least one non-terminal" +
+              " (exactly one for context-free grammars)!");
     }
     mLeftMember = leftMember;
     mRightMember = rightMember;

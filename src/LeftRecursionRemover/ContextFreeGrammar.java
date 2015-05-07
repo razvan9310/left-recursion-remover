@@ -148,6 +148,10 @@ public class ContextFreeGrammar extends Grammar {
       newProductionRules.add(
           new ProductionRule(Arrays.asList((Symbol) nonTerminal), newRightMember));
     }
+    if (nonLeftRecursiveProductions.isEmpty()) {
+      newProductionRules.add(new ProductionRule(Arrays.asList((Symbol) nonTerminal),
+          Arrays.asList((Symbol) newNonTerminal)));
+    }
 
     newProductionRules.add(new ProductionRule(Arrays.asList((Symbol) newNonTerminal),
         Arrays.asList((Symbol) new Terminal(Terminal.EMPTY_VALUE))));
